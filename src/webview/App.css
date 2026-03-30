@@ -5,38 +5,3 @@
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
 }
-
-vscode-panels {
-    flex: 1;
-    overflow: hidden;
-}
-
-vscode-panel-view {
-    padding: 20px;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
-
-vscode-panels > vscode-panel-view[name="tab-1"] {
-    height: calc(100vh - 100px);
-}
-
-vscode-panels > vscode-panel-view[name="tab-2"] {
-    padding: 0 !important;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 100px);
-}
-
-vscode-panels > vscode-panel-view[name="tab-3"] {
-    padding: 0 !important;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 100px);
-}
-
-vscode-panels > vscode-panel-view[name="tab-4"] {
-    padding: 0 !important;
-    overflow-y: auto;
-    height: calc(100vh - 100px);
-}

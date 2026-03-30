@@ -6,6 +6,8 @@ interface Props {
 }
 
 export const Conflicts: React.FC<Props> = ({ conflicts }) => {
+    console.log('[Conflicts] 渲染，conflicts 数量:', conflicts.length, 'conflicts:', conflicts);
+
     return (
         <div style={{ padding: '10px' }}>
             <h3>快捷键冲突</h3>

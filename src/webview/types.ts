@@ -8,6 +8,7 @@ export interface ExtensionData {
     activationEvents: string[];
     isEager: boolean;
     isActive: boolean;
+    isDisabled?: boolean; // 标记被禁用的插件
     installDate?: number;
     updateDate?: number;
     dependencies: string[];
