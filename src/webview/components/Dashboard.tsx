@@ -1,3 +1,4 @@
+// 仪表盘组件：负责展示插件分类的饼状图
 import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 

@@ -1,3 +1,4 @@
+//插件入口：负责注册命令和创建Webview面板
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Analyzer, ExtensionData } from './Analyzer';
@@ -50,6 +51,14 @@ export function activate(context: vscode.ExtensionContext) {
                         case 'export':
                             await exportConfig();
                             break;
+                        case 'disable':
+                            await requestDisable(message.extensionId, message.extensionName);
+                            await updateData(currentPanel!);
+                            break;
+                        case 'uninstall':
+                            await requestUninstall(message.extensionId, message.extensionName);
+                            await updateData(currentPanel!);
+                            break;
                     }
                 },
                 undefined,
@@ -59,10 +68,46 @@ export function activate(context: vscode.ExtensionContext) {
     );
 }
 
+async function requestDisable(extensionId: string, extensionName: string) {
+    const result = await vscode.window.showInformationMessage(
+        `确定要禁用插件 "${extensionName}" 吗？`,
+        { modal: true },
+        '确定'
+    );
+
+    if (result === '确定') {
+        try {
+            await vscode.commands.executeCommand('workbench.extensions.action.disableExtension', extensionId);
+            vscode.window.showInformationMessage(`已成功禁用插件: ${extensionName}`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`禁用插件失败: ${error}`);
+        }
+    }
+}
+
+async function requestUninstall(extensionId: string, extensionName: string) {
+    const result = await vscode.window.showInformationMessage(
+        `确定要卸载插件 "${extensionName}" 吗？此操作不可撤销。`,
+        { modal: true },
+        '卸载'
+    );
+
+    if (result === '卸载') {
+        try {
+            await vscode.commands.executeCommand('workbench.extensions.action.uninstallExtension', extensionId);
+            vscode.window.showInformationMessage(`已成功卸载插件: ${extensionName}`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`卸载插件失败: ${error}`);
+        }
+    }
+}
+
 async function updateData(panel: vscode.WebviewPanel) {
     try {
         const extensions = await Analyzer.getExtensions();
         const conflicts = Analyzer.getConflicts(extensions);
+        
+        console.log(`[Backend] 已获取 ${extensions.length} 个扩展，其中用户扩展 ${extensions.filter(e => !e.isBuiltin).length} 个`);
         
         panel.webview.postMessage({
             command: 'updateData',
@@ -73,6 +118,7 @@ async function updateData(panel: vscode.WebviewPanel) {
         });
     } catch (error) {
         vscode.window.showErrorMessage(`分析扩展失败: ${error}`);
+        console.error(`[Backend] 分析失败: ${error}`);
     }
 }
 

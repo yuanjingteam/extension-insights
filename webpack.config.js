@@ -71,4 +71,5 @@ const webviewConfig = {
   },
 };
 
+//导出的两个配置：打包插件主程序和打包webview前端页面
 module.exports = [extensionConfig, webviewConfig];

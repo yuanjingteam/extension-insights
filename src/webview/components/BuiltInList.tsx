@@ -1,3 +1,4 @@
+// 内置插件列表组件：负责展示VS Code内置的插件信息
 import React from 'react';
 import { ExtensionData } from '../types';
 

@@ -1,7 +1,7 @@
 {
   "name": "extension-insights",
   "displayName": "Extension Insights",
-  "publisher": "yanwei",
+  "publisher": "zhangxiaohh",
   "description": "分析并可视化您的 VS Code 扩展生态系统。",
   "version": "0.0.1",
   "engines": {

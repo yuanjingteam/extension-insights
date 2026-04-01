@@ -1,3 +1,4 @@
+// 冲突组件：负责展示快捷键冲突信息
 import React from 'react';
 import { ConflictData } from '../types';
 

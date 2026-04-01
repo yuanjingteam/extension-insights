@@ -10,7 +10,9 @@ export interface ExtensionData {
     isActive: boolean;
     isDisabled?: boolean; // 标记被禁用的插件
     installDate?: number;
-    updateDate?: number;
+    marketReleaseDate?: string; // 市场首发时间
+    marketUpdateDate?: string;  // 市场发布时间
+    size?: number;             // 磁盘大小（字节）
     dependencies: string[];
     contributions: {
         commands: number;
