@@ -46,14 +46,23 @@ export interface Stats {
 function getExtensionsJsonPath(): string {
     const homeDir = os.homedir();
     const platform = process.platform;
+    let vscodeFolder = 'Code';
 
-    if (platform === 'darwin') {
-        return path.join(homeDir, 'Library', 'Application Support', 'Code', 'User', 'globalStorage', 'extensions.json');
-    } else if (platform === 'win32') {
-        return path.join(process.env.APPDATA || '', 'Code', 'User', 'globalStorage', 'extensions.json');
-    } else {
-        return path.join(homeDir, '.config', 'Code', 'User', 'globalStorage', 'extensions.json');
+    // 检查是否在 Insiders 版本中运行，或者尝试适配 Insiders
+    if (vscode.env.appName.includes('Insiders')) {
+        vscodeFolder = 'Code - Insiders';
     }
+
+    let basePath = '';
+    if (platform === 'darwin') {
+        basePath = path.join(homeDir, 'Library', 'Application Support', vscodeFolder);
+    } else if (platform === 'win32') {
+        basePath = path.join(process.env.APPDATA || '', vscodeFolder);
+    } else {
+        basePath = path.join(homeDir, '.config', vscodeFolder);
+    }
+
+    return path.join(basePath, 'User', 'globalStorage', 'extensions.json');
 }
 
 // 从 extensions.json 读取所有已安装的扩展（包括禁用的）
@@ -62,6 +71,9 @@ function readDisabledExtensions(): Map<string, { version: string; installDate?: 
 
     try {
         const extensionsPath = getExtensionsJsonPath();
+        if (!fs.existsSync(extensionsPath)) {
+            return extensionsMap;
+        }
         const content = fs.readFileSync(extensionsPath, 'utf-8');
         const extensionsData = JSON.parse(content);
 
