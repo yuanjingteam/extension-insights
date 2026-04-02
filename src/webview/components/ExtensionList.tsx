@@ -95,7 +95,6 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                                         whiteSpace: 'nowrap', 
                                         overflow: 'hidden', 
                                         textOverflow: 'ellipsis',
-                                        cursor: 'help'
                                     }}
                                 >
                                     {ext.name} <span style={{ opacity: 0.6, fontSize: '0.85em' }}>({ext.version})</span>

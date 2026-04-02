@@ -1,4 +1,3 @@
-
 // Declare acquireVsCodeApi directly
 declare function acquireVsCodeApi(): any;
 

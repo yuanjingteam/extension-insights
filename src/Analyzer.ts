@@ -172,6 +172,7 @@ async function fetchMarketplaceData(extensionIds: string[]): Promise<Record<stri
 }
 
 export class Analyzer {
+    //核心入口：获取所有扩展信息和分析冲突
     public static async getExtensions(): Promise<ExtensionData[]> {
         const enabledExtensions = vscode.extensions.all;
         const allInstalledExtensions = readDisabledExtensions();
@@ -183,7 +184,6 @@ export class Analyzer {
         for (const ext of enabledExtensions) {
             const packageJSON = ext.packageJSON;
 
-            // Skip if no packageJSON (shouldn't happen for valid exts)
             if (!packageJSON) { continue; }
 
             const activationEvents = packageJSON.activationEvents || [];
@@ -339,6 +339,7 @@ export class Analyzer {
         return data;
     }
 
+    //冲突检测：分析所有扩展的keybindings，检测是否有冲突
     public static getConflicts(extensions: ExtensionData[]): { key: string, commands: string[], sources: string[] }[] {
         const keyMap = new Map<string, { command: string, source: string }[]>();
 
