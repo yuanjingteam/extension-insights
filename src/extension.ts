@@ -131,10 +131,9 @@ async function updateData(panel: vscode.WebviewPanel) {
 
 async function exportConfig() {
     const extensions = await Analyzer.getExtensions();
-    // Generate .vscode/extensions.json format
     const recommendations = extensions
         .filter(ext => !ext.isBuiltin)
-        .map(ext => ext.id); // ext.id is usually publisher.name
+        .map(ext => ext.id); 
 
     const content = {
         recommendations
@@ -152,7 +151,6 @@ async function exportConfig() {
 function getWebviewContent(webview: vscode.Webview, extensionPath: string) {
     const scriptUri = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, 'dist', 'webview.js')));
 
-    // Use a nonce to only allow specific scripts to be run
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
@@ -179,4 +177,3 @@ function getNonce() {
     return text;
 }
 
-export function deactivate() { }

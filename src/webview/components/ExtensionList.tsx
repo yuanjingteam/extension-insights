@@ -1,5 +1,5 @@
 // 插件列表组件：负责展示用户安装的插件列表
-import React from 'react';
+import React, { useState } from 'react';
 import { ExtensionData } from '../types';
 
 interface Props {
@@ -41,18 +41,80 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
     };
 
     // 排序
+    const [sortKey, setSortKey] = useState<string>('name');
+    const [sortOrder, setSortOrder] = useState<string>('asc');
     const sortedExtensions = [...userExtensions].sort((a, b) => {
-        // 先按状态排序：启用 > 禁用
-        if (a.isDisabled && !b.isDisabled) return 1;
-        if (!a.isDisabled && b.isDisabled) return -1;
-        // 再按 isEager 排序
-        if (a.isEager && !b.isEager) return -1;
-        if (!a.isEager && b.isEager) return 1;
-        // 最后按贡献数排序
-        const aContrib = a.contributions.commands + a.contributions.menus + a.contributions.views;
-        const bContrib = b.contributions.commands + b.contributions.menus + b.contributions.views;
-        return bContrib - aContrib;
+        let valA: any;
+        let valB: any;
+
+        switch (sortKey) {
+            case 'name':
+                return sortOrder === 'asc' 
+                    ? a.name.localeCompare(b.name) 
+                    : b.name.localeCompare(a.name);
+            case 'status':
+                // 排序顺序：已禁用 > 已激活 > 未激活
+                const getStatusWeight = (ext: ExtensionData) => {
+                    if (ext.isDisabled) return 0;
+                    if (ext.isActive) return 1;
+                    return 2;
+                };
+                valA = getStatusWeight(a);
+                valB = getStatusWeight(b);
+                break;
+            case 'size':
+                valA = a.size || 0;
+                valB = b.size || 0;
+                break;
+            case 'isEager':
+                valA = a.isEager ? 0 : 1;
+                valB = b.isEager ? 0 : 1;
+                break;
+            case 'commands':
+                valA = a.contributions.commands;
+                valB = b.contributions.commands;
+                break;
+            case 'menus':
+                valA = a.contributions.menus;
+                valB = b.contributions.menus;
+                break;
+            case 'views':
+                valA = a.contributions.views;
+                valB = b.contributions.views;
+                break;
+            case 'installDate':
+                valA = new Date(a.installDate || 0).getTime();
+                valB = new Date(b.installDate || 0).getTime();
+                break;
+            case 'marketReleaseDate':
+                valA = new Date(a.marketReleaseDate || 0).getTime();
+                valB = new Date(b.marketReleaseDate || 0).getTime();
+                break;
+            case 'marketUpdateDate':
+                valA = new Date(a.marketUpdateDate || 0).getTime();
+                valB = new Date(b.marketUpdateDate || 0).getTime();
+                break;
+            default:
+                valA = a.name;
+                valB = b.name;
+        }
+
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
     });
+    
+    //实现排队切换逻辑
+    const handleSort = (key: string) => {
+        if (sortKey === key) {
+            // 同一列 → 切换升降序
+            setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            // 新列 → 默认升序
+            setSortKey(key);
+            setSortOrder('asc');
+        }
+    };
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -74,26 +136,46 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
             <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 20px 20px 20px' }}>
                 <vscode-data-grid aria-label="插件统计" grid-template-columns="2fr 1fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1.2fr 1.2fr 1.5fr">
                     <vscode-data-grid-row row-type="header" style={{ position: 'sticky', top: 0, background: 'var(--vscode-editor-background)', zIndex: 1, borderBottom: '1px solid var(--vscode-widget-border)' }}>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="1">名称</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="2">状态</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="3">大小</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="4">启动方式</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="5">命令数</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="6">菜单项</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="7">视图数</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="8">安装时间</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="9">市场首发</vscode-data-grid-cell>
-                        <vscode-data-grid-cell cell-type="columnheader" grid-column="10">市场更新</vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="1" onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
+                            名称{sortKey === 'name' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="2" onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>
+                            状态{sortKey === 'status' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="3" onClick={() => handleSort('size')} style={{ cursor: 'pointer' }}>
+                            大小{sortKey === 'size' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="4" onClick={() => handleSort('isEager')} style={{ cursor: 'pointer' }}>
+                            启动方式{sortKey === 'isEager' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="5" onClick={() => handleSort('commands')} style={{ cursor: 'pointer' }}>
+                            命令数{sortKey === 'commands' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="6" onClick={() => handleSort('menus')} style={{ cursor: 'pointer' }}>
+                            菜单项{sortKey === 'menus' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="7" onClick={() => handleSort('views')} style={{ cursor: 'pointer' }}>
+                            视图数{sortKey === 'views' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="8" onClick={() => handleSort('installDate')} style={{ cursor: 'pointer' }}>
+                            安装时间{sortKey === 'installDate' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="9" onClick={() => handleSort('marketReleaseDate')} style={{ cursor: 'pointer' }}>
+                            市场首发{sortKey === 'marketReleaseDate' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
+                        <vscode-data-grid-cell cell-type="columnheader" grid-column="10" onClick={() => handleSort('marketUpdateDate')} style={{ cursor: 'pointer' }}>
+                            市场更新{sortKey === 'marketUpdateDate' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                        </vscode-data-grid-cell>
                         <vscode-data-grid-cell cell-type="columnheader" grid-column="11">操作</vscode-data-grid-cell>
                     </vscode-data-grid-row>
                     {sortedExtensions.map(ext => (
                         <vscode-data-grid-row key={ext.id} style={{ alignItems: 'center' }}>
                             <vscode-data-grid-cell grid-column="1" style={{ overflow: 'hidden' }}>
-                                <div 
+                                <div
                                     title={`${ext.name} (${ext.version})\nID: ${ext.id}`}
-                                    style={{ 
-                                        whiteSpace: 'nowrap', 
-                                        overflow: 'hidden', 
+                                    style={{
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                     }}
                                 >
@@ -102,10 +184,10 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                             </vscode-data-grid-cell>
                             <vscode-data-grid-cell grid-column="2">
                                 {ext.isDisabled ?
-                                    <span style={{color: 'var(--vscode-errorForeground)'}}>● 已禁用</span> :
+                                    <span style={{ color: 'var(--vscode-errorForeground)' }}>● 已禁用</span> :
                                     ext.isActive ?
-                                    <span style={{color: 'var(--vscode-testing-iconPassed)'}}>● 已激活</span> :
-                                    <span style={{color: 'var(--vscode-descriptionForeground)'}}>○ 未激活</span>
+                                        <span style={{ color: 'var(--vscode-testing-iconPassed)' }}>● 已激活</span> :
+                                        <span style={{ color: 'var(--vscode-descriptionForeground)' }}>○ 未激活</span>
                                 }
                             </vscode-data-grid-cell>
                             <vscode-data-grid-cell grid-column="3">
@@ -113,8 +195,8 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                             </vscode-data-grid-cell>
                             <vscode-data-grid-cell grid-column="4">
                                 {ext.isDisabled ?
-                                    <span style={{color: 'var(--vscode-errorForeground)'}}>已禁用</span> :
-                                    ext.isEager ? <span style={{color: 'var(--vscode-charts-red)'}}>立即加载</span> : '按需加载'
+                                    <span style={{ color: 'var(--vscode-errorForeground)' }}>已禁用</span> :
+                                    ext.isEager ? <span style={{ color: 'var(--vscode-charts-red)' }}>立即加载</span> : '按需加载'
                                 }
                             </vscode-data-grid-cell>
                             <vscode-data-grid-cell grid-column="5">{ext.contributions.commands}</vscode-data-grid-cell>
@@ -132,13 +214,13 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                             <vscode-data-grid-cell grid-column="11">
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '100%' }}>
                                     {!ext.isDisabled && (
-                                        <button 
-                                            style={{ 
-                                                backgroundColor: 'var(--vscode-testing-iconQueued)', 
-                                                color: 'var(--vscode-button-foreground)', 
+                                        <button
+                                            style={{
+                                                backgroundColor: 'var(--vscode-testing-iconQueued)',
+                                                color: 'var(--vscode-button-foreground)',
                                                 border: 'none',
                                                 borderRadius: '2px',
-                                                height: '24px', 
+                                                height: '24px',
                                                 minWidth: '50px',
                                                 padding: '0 8px',
                                                 fontSize: '11px',
@@ -146,8 +228,8 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                                                 whiteSpace: 'nowrap'
                                             }}
                                             onClick={() => {
-                                                import('../utils/vscode').then(m => m.vscode.postMessage({ 
-                                                    command: 'disable', 
+                                                import('../utils/vscode').then(m => m.vscode.postMessage({
+                                                    command: 'disable',
                                                     extensionId: ext.id,
                                                     extensionName: ext.name
                                                 }));
@@ -156,13 +238,13 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                                             禁用
                                         </button>
                                     )}
-                                    <button 
-                                        style={{ 
-                                            backgroundColor: 'var(--vscode-errorForeground)', 
-                                            color: 'white', 
+                                    <button
+                                        style={{
+                                            backgroundColor: 'var(--vscode-errorForeground)',
+                                            color: 'white',
                                             border: 'none',
                                             borderRadius: '2px',
-                                            height: '24px', 
+                                            height: '24px',
                                             minWidth: '50px',
                                             padding: '0 8px',
                                             fontSize: '11px',
@@ -170,8 +252,8 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
                                             whiteSpace: 'nowrap'
                                         }}
                                         onClick={() => {
-                                            import('../utils/vscode').then(m => m.vscode.postMessage({ 
-                                                command: 'uninstall', 
+                                            import('../utils/vscode').then(m => m.vscode.postMessage({
+                                                command: 'uninstall',
                                                 extensionId: ext.id,
                                                 extensionName: ext.name
                                             }));
