@@ -61,7 +61,8 @@ export const Dashboard: React.FC<Props> = ({ extensions }) => {
                 }
             },
             tooltip: {
-                trigger: 'item'
+                trigger: 'item',
+                formatter: '{a}: {b} ({d}%)'
             },
             series: [
                 {
@@ -69,6 +70,15 @@ export const Dashboard: React.FC<Props> = ({ extensions }) => {
                     type: 'pie',
                     radius: '50%',
                     data: data,
+                    //控制文字的显示
+                    label: {
+                        show: true,
+                        formatter: '{b}: {c}({d}%)',
+                        borderColor: 'transparent',
+                        color: '#fff', 
+                        fontSize: 14,  
+                        fontWeight: 'normal', 
+                    },
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,
