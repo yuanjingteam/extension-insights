@@ -270,14 +270,3 @@ export const ExtensionList: React.FC<Props> = ({ extensions }) => {
         </div>
     );
 };
-
-// Declare custom elements for TypeScript
-declare global {
-    namespace JSX {
-        interface IntrinsicElements {
-            'vscode-data-grid': any;
-            'vscode-data-grid-row': any;
-            'vscode-data-grid-cell': any;
-        }
-    }
-}
